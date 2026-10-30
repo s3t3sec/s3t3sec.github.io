@@ -1,0 +1,13 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleList from '../../components/ArticleList.astro';
+import WriteupCard from '../../components/WriteupCard.astro';
+import { getPublishedWriteups, getUpcomingWriteups } from '../../lib/writeups';
+const published = (await getPublishedWriteups()).filter((entry) => entry.data.category === 'machines');
+const upcoming = (await getUpcomingWriteups()).filter((entry) => entry.category === 'Machines');
+---
+<BaseLayout title="Machines" description="Write-ups das máquinas regulares do Hack The Box.">
+  <div class="page-intro"><div class="section-kicker">/ write-ups / prática</div><h1>Machines<span class="accent">.</span></h1><p class="page-lead">Espaço para máquinas regulares. Cada artigo será listado aqui após a publicação.</p></div>
+  <section class="content-section"><div class="section-heading"><div><div class="section-kicker">/ biblioteca</div><h2>Artigos publicados</h2></div></div><ArticleList entries={published} emptyMessage="Ainda não há write-ups concluídos em Machines." /></section>
+  {upcoming.length > 0 && <section class="content-section"><div class="section-heading"><div><div class="section-kicker">/ em andamento</div><h2>Em preparação</h2><p>Estes estudos ainda não estão disponíveis para leitura.</p></div></div><div class="card-grid">{upcoming.map((entry) => <WriteupCard entry={entry} />)}</div></section>}
+</BaseLayout>

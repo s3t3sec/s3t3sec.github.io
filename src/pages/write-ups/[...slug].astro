@@ -1,0 +1,11 @@
+---
+import WriteupLayout from '../../layouts/WriteupLayout.astro';
+import { getCollection } from 'astro:content';
+import { getPublishedWriteups } from '../../lib/writeups';
+export async function getStaticPaths() {
+  const entries = import.meta.env.PROD ? await getPublishedWriteups() : await getCollection('writeups');
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+const { entry } = Astro.props;
+---
+<WriteupLayout entry={entry} />

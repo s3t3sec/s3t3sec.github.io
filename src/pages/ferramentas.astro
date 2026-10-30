@@ -1,0 +1,6 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+const entries = (await getCollection('notes')).filter((entry) => entry.data.kind === 'ferramentas');
+---
+<BaseLayout title="Ferramentas" description="Notas independentes sobre ferramentas de cibersegurança."><div class="page-intro"><div class="section-kicker">/ base de conhecimento</div><h1>Ferramentas<span class="accent">.</span></h1><p class="page-lead">Um lugar para comandos, opções e aprendizados sobre ferramentas. Nmap, Burp Suite, Gobuster e ffuf estão no roteiro.</p></div>{entries.length ? <div class="article-list">{entries.map((entry) => <a class="article-row" href={`/notas/${entry.id}/`}><span>{entry.data.title}</span><small>{entry.data.description}</small><span aria-hidden="true">↗</span></a>)}</div> : <div class="empty-state"><span class="empty-symbol">&gt;_</span><h2>Notas a caminho</h2><p>Esta seção crescerá conforme os estudos forem documentados.</p></div>}</BaseLayout>

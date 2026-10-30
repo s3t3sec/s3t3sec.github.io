@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ArticleList from '../../../components/ArticleList.astro';
+import { getPublishedWriteups } from '../../../lib/writeups';
+const published = (await getPublishedWriteups()).filter((entry) => entry.data.category === 'starting-point');
+---
+<BaseLayout title="Starting Point" description="Write-ups da trilha Starting Point, organizados por tier.">
+  <div class="page-intro"><div class="section-kicker">/ write-ups / trilha</div><h1>Starting Point<span class="accent">.</span></h1><p class="page-lead">Uma trilha de aprendizado em etapas. Os artigos publicados aparecem abaixo e também em seus respectivos tiers.</p></div>
+  <div class="category-grid three"><a class="category-tile" href="/write-ups/starting-point/tier-0/"><span class="tile-index">00 / fundamentos</span><strong>Tier 0</strong><span>Primeiros passos <b aria-hidden="true">↗</b></span></a><a class="category-tile" href="/write-ups/starting-point/tier-1/"><span class="tile-index">01 / exploração</span><strong>Tier 1</strong><span>Pennyworth · Bike em preparação <b aria-hidden="true">↗</b></span></a><a class="category-tile" href="/write-ups/starting-point/tier-2/"><span class="tile-index">02 / aprofundamento</span><strong>Tier 2</strong><span>Included em preparação <b aria-hidden="true">↗</b></span></a></div>
+  <section class="content-section"><div class="section-heading"><div><div class="section-kicker">/ biblioteca</div><h2>Artigos publicados</h2></div></div><ArticleList entries={published} emptyMessage="Ainda não há write-ups concluídos nesta trilha." /></section>
+</BaseLayout>

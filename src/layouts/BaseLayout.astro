@@ -1,0 +1,71 @@
+---
+import Sidebar from '../components/Sidebar.astro';
+import '../styles/global.css';
+
+interface Props { title: string; description: string; }
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#111315" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="s3t3 — Beyond the Shell" />
+    <meta property="og:title" content={title === 'Home' ? 's3t3 — Beyond the Shell' : `${title} | s3t3`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:url" content={canonical.href} />
+    <link rel="canonical" href={canonical.href} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title === 'Home' ? 's3t3 — Beyond the Shell' : `${title} | s3t3`}</title>
+    <script is:inline>
+      try { document.documentElement.dataset.theme = localStorage.getItem('s3t3-theme') === 'light' ? 'light' : 'dark'; } catch {}
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="s3t3, ir para Home"><span class="brand-mark" aria-hidden="true">&gt;_</span><span class="brand-name">s3t3<span class="brand-dot">.</span></span><span class="brand-divider"></span><span class="brand-tagline">Beyond the Shell</span></a>
+        <div class="header-actions"><a class="github-link" href="https://github.com/s3t3sec/s3t3sec.github.io" target="_blank" rel="noopener noreferrer" aria-label="Repositório no GitHub">GitHub <span aria-hidden="true">↗</span></a><button id="theme-toggle" class="icon-button" type="button" aria-label="Alternar tema" title="Alternar tema"><span class="theme-icon" aria-hidden="true">☼</span></button><button id="menu-toggle" class="icon-button menu-toggle" type="button" aria-label="Abrir menu" aria-controls="site-sidebar" aria-expanded="false"><span aria-hidden="true">☰</span></button></div>
+      </div>
+    </header>
+    <div class="site-shell"><Sidebar /><main id="main-content" class="main-content"><slot /><footer class="site-footer"><span>© {new Date().getFullYear()} s3t3</span><span>Beyond the Shell <span class="footer-dot">·</span> Feito com Astro</span></footer></main></div>
+    <script>
+      const themeButton = document.querySelector<HTMLButtonElement>('#theme-toggle');
+      const menuButton = document.querySelector<HTMLButtonElement>('#menu-toggle');
+      const sidebar = document.querySelector<HTMLElement>('#site-sidebar');
+      const updateTheme = () => {
+        const light = document.documentElement.dataset.theme === 'light';
+        themeButton?.setAttribute('aria-label', light ? 'Ativar tema escuro' : 'Ativar tema claro');
+        if (themeButton) themeButton.querySelector('.theme-icon')!.textContent = light ? '☾' : '☼';
+      };
+      updateTheme();
+      themeButton?.addEventListener('click', () => {
+        const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+        document.documentElement.dataset.theme = next;
+        try { localStorage.setItem('s3t3-theme', next); } catch {}
+        updateTheme();
+      });
+      menuButton?.addEventListener('click', () => {
+        const open = menuButton.getAttribute('aria-expanded') !== 'true';
+        menuButton.setAttribute('aria-expanded', String(open));
+        menuButton.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+        sidebar?.classList.toggle('is-open', open);
+      });
+      sidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => { sidebar.classList.remove('is-open'); menuButton?.setAttribute('aria-expanded', 'false'); }));
+      sidebar?.querySelectorAll<HTMLButtonElement>('[data-nav-toggle]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const submenu = document.getElementById(button.getAttribute('aria-controls') ?? '');
+          if (!submenu) return;
+          const open = button.getAttribute('aria-expanded') !== 'true';
+          button.setAttribute('aria-expanded', String(open));
+          submenu.hidden = !open;
+        });
+      });
+    </script>
+  </body>
+</html>

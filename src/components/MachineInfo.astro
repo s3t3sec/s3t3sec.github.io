@@ -1,0 +1,174 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import OsIcon from './OsIcon.astro';
+
+interface Props {
+  data: CollectionEntry<'writeups'>['data'];
+}
+
+const { data } = Astro.props;
+const category = data.category === 'starting-point' ? 'Starting Point' : 'Machines';
+const date = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(data.date);
+---
+<section class="machine-info" aria-label="Informações da máquina">
+  <div class="machine-info__hero">
+    <div class:list={['machine-info__image', { 'machine-info__image--cover': data.image }]}>
+      {data.image ? <img src={data.image} alt={data.imageAlt ?? `Avatar da máquina ${data.title}`} /> : <span class="machine-info__image-empty" aria-hidden="true">—</span>}
+    </div>
+    <div class="machine-info__identity">
+      <div class="machine-info__title-row">
+        <h1>{data.title}<span class="accent">.</span></h1>
+        <span class:list={['machine-info__status', { 'machine-info__status--draft': data.status === 'draft' }]}>
+          {data.status === 'draft' ? 'Rascunho' : 'Publicado'}
+        </span>
+      </div>
+      <div class="machine-info__attributes">
+        <span class="machine-info__os"><OsIcon os={data.os} />{data.os}</span>
+        <span class="machine-info__attribute-divider" aria-hidden="true"></span>
+        <span>{data.difficulty}</span>
+      </div>
+      <p>{data.description}</p>
+    </div>
+  </div>
+
+  <dl class="machine-info__facts">
+    <div><dt>Plataforma</dt><dd>{data.platform}</dd></div>
+    <div><dt>Categoria</dt><dd>{category}</dd></div>
+    {data.tier && <div><dt>Tier</dt><dd>{data.tier}</dd></div>}
+    <div><dt>Data</dt><dd><time datetime={data.date.toISOString().slice(0, 10)}>{date}</time></dd></div>
+  </dl>
+
+  {data.techniques.length > 0 && (
+    <div class="machine-info__techniques">
+      <p>Técnicas utilizadas</p>
+      <ul aria-label="Técnicas utilizadas">
+        {data.techniques.map((technique) => <li>{technique}</li>)}
+      </ul>
+    </div>
+  )}
+</section>
+
+<style>
+  .machine-info {
+    overflow: hidden;
+    margin-top: 24px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .machine-info__hero {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    align-items: center;
+    gap: 24px;
+    padding: 28px 30px;
+  }
+  .machine-info__image {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    place-items: center;
+    width: 88px;
+    height: 88px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface-2);
+  }
+  .machine-info__image--cover {
+    background:
+      radial-gradient(circle at 50% 65%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 67%),
+      radial-gradient(circle at 85% 15%, rgba(138, 99, 195, .12), transparent 53%),
+      var(--surface-2);
+  }
+  .machine-info__image--cover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--accent) 12%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--accent) 12%, transparent) 1px, transparent 1px);
+    background-size: 14px 14px;
+    mask-image: radial-gradient(circle, #000 25%, transparent 85%);
+  }
+  .machine-info__image--cover::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+    opacity: .55;
+  }
+  .machine-info__image img {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .25));
+  }
+  .machine-info__image-empty { color: var(--faint); font: 24px/1 var(--mono); }
+  .machine-info__identity { min-width: 0; }
+  .machine-info__title-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; }
+  .machine-info h1 {
+    margin: 0;
+    font: 600 clamp(32px, 4vw, 49px)/1.12 var(--display);
+    letter-spacing: -.055em;
+    overflow-wrap: anywhere;
+  }
+  .machine-info__status {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--accent);
+    font: 10px/1.4 var(--mono);
+    white-space: nowrap;
+  }
+  .machine-info__status--draft { color: var(--faint); }
+  .machine-info__attributes { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 8px; color: var(--muted); font: 12px var(--mono); }
+  .machine-info__os { display: inline-flex; align-items: center; gap: 7px; }
+  .machine-info__os :global(.os-icon) { width: 20px; height: 20px; }
+  .machine-info__attribute-divider { width: 1px; height: 13px; background: var(--line); }
+  .machine-info__identity p { max-width: 650px; margin: 13px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .machine-info__facts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 17px 22px;
+    border-top: 1px solid var(--line);
+  }
+  .machine-info__facts > div { min-width: 0; padding: 3px 16px; border-left: 1px solid var(--line-soft); }
+  .machine-info__facts > div:first-child { border-left: 0; padding-left: 8px; }
+  .machine-info__facts dt, .machine-info__techniques p {
+    margin: 0 0 6px;
+    color: var(--faint);
+    font: 500 10px/1.4 var(--mono);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+  }
+  .machine-info__facts dd { margin: 0; color: var(--text); font-size: 13px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
+  .machine-info__techniques { padding: 19px 30px 24px; border-top: 1px solid var(--line); }
+  .machine-info__techniques p { margin-bottom: 10px; }
+  .machine-info__techniques ul { display: flex; flex-wrap: wrap; gap: 7px; padding: 0; margin: 0; list-style: none; }
+  .machine-info__techniques li { padding: 5px 9px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface-2); color: var(--text); font: 11px/1.4 var(--mono); }
+  @media (max-width: 760px) {
+    .machine-info__hero { grid-template-columns: 68px minmax(0, 1fr); gap: 16px; padding: 22px; }
+    .machine-info__image { width: 68px; height: 68px; }
+    .machine-info__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 15px; padding: 18px; }
+    .machine-info__facts > div:nth-child(odd) { border-left: 0; padding-left: 4px; }
+    .machine-info__techniques { padding: 18px 22px 22px; }
+  }
+  @media (max-width: 440px) {
+    .machine-info__hero { grid-template-columns: 52px minmax(0, 1fr); align-items: start; gap: 12px; padding: 18px; }
+    .machine-info__image { width: 52px; height: 52px; }
+    .machine-info h1 { font-size: 30px; }
+    .machine-info__identity p { margin-left: -64px; padding-top: 8px; }
+    .machine-info__facts { padding: 15px; }
+    .machine-info__facts > div { padding-right: 7px; }
+    .machine-info__techniques { padding: 17px 18px 20px; }
+  }
+</style>

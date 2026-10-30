@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import WriteupCard from '../components/WriteupCard.astro';
+import { getPublishedWriteupCards, getUpcomingWriteups } from '../lib/writeups';
+const upcomingWriteups = await getUpcomingWriteups();
+const publishedCards = await getPublishedWriteupCards();
+---
+<BaseLayout title="Home" description="s3t3: estudos de cybersecurity, CTFs e offensive security, com write-ups e anotações em português.">
+  <section class="hero">
+    <div class="eyebrow"><span class="eyebrow-line"></span> Um espaço para aprender em público</div>
+    <h1>Além do shell<span class="accent">.</span><br /><span class="muted-heading">Mais perto do porquê.</span></h1>
+    <p class="hero-lead">Um registro aberto da minha jornada em segurança ofensiva. Aqui reúno write-ups, conceitos e ferramentas, com foco no raciocínio por trás de cada descoberta.</p>
+    <p class="hero-subtitle">Cybersecurity <span>·</span> CTFs <span>·</span> Offensive Security</p>
+    <div class="hero-actions"><a class="button-primary" href="/write-ups/">Explorar write-ups <span aria-hidden="true">↗</span></a><a class="text-link" href="/whoami/">Conheça o s3t3 <span aria-hidden="true">→</span></a></div>
+    <div class="hero-terminal" aria-hidden="true"><span class="terminal-prompt">s3t3@lab</span><span class="terminal-separator">:</span><span class="terminal-path">~</span><span>$</span> <span class="terminal-command">keep learning</span><span class="terminal-cursor"></span></div>
+  </section>
+  {publishedCards.length > 0 && <section class="content-section" aria-labelledby="published-title"><div class="section-heading"><div><div class="section-kicker">/ 01 — Publicados</div><h2 id="published-title">Write-ups publicados</h2></div></div><div class="card-grid">{publishedCards.map((entry) => <WriteupCard entry={entry} />)}</div></section>}
+  {upcomingWriteups.length > 0 && <section class="content-section" aria-labelledby="recent-title"><div class="section-heading"><div><div class="section-kicker">/ 02 — No radar</div><h2 id="recent-title">Write-ups em preparação</h2><p>Máquinas que estou estudando. Os relatos serão publicados conforme as análises forem concluídas.</p></div><a href="/write-ups/" class="section-link">Ver estrutura <span aria-hidden="true">↗</span></a></div><div class="card-grid">{upcomingWriteups.map((entry) => <WriteupCard entry={entry} />)}</div></section>}
+  <aside class="legal-note" aria-label="Aviso legal"><span class="legal-icon" aria-hidden="true">!</span><p><strong>Uso responsável.</strong> As técnicas descritas neste site são destinadas exclusivamente a ambientes próprios ou para os quais exista autorização explícita.</p></aside>
+</BaseLayout>

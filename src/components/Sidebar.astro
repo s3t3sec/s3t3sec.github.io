@@ -1,0 +1,62 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import OsIcon from './OsIcon.astro';
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => path === (href.replace(/\/$/, '') || '/');
+const inWriteups = path === '/write-ups' || path.startsWith('/write-ups/');
+const articleId = inWriteups && !['/write-ups', '/write-ups/starting-point', '/write-ups/machines'].includes(path) && !/^\/write-ups\/starting-point\/tier-[012]$/.test(path)
+  ? path.slice('/write-ups/'.length)
+  : null;
+const article = articleId ? await getEntry('writeups', articleId) : undefined;
+const inStartingPoint = path.startsWith('/write-ups/starting-point') || article?.data.category === 'starting-point';
+const writeupsOpen = inWriteups;
+const startingPointOpen = inStartingPoint;
+const sectionActive = (section: 'starting-point' | 'machines', tier?: string) => {
+  if (!article) return false;
+  return article.data.category === section && (tier === undefined || article.data.tier === tier);
+};
+const visibleWriteups = (await getCollection('writeups', ({ data }) => import.meta.env.DEV || data.status === 'published'))
+  .sort((a, b) => a.data.title.localeCompare(b.data.title, 'pt-BR'));
+const tierWriteups = (tier: string) => visibleWriteups.filter((entry) => entry.data.category === 'starting-point' && entry.data.tier === tier);
+const machineWriteups = visibleWriteups.filter((entry) => entry.data.category === 'machines');
+---
+<aside class="sidebar" id="site-sidebar" aria-label="Navegação lateral">
+  <nav aria-label="Navegação principal" class="side-nav">
+    <p class="nav-label">Navegação</p>
+    <a class:list={['nav-link', { active: isActive('/') }]} href="/" aria-current={isActive('/') ? 'page' : undefined}>Home</a>
+    <a class:list={['nav-link', { active: isActive('/whoami/') }]} href="/whoami/" aria-current={isActive('/whoami/') ? 'page' : undefined}>Whoami</a>
+
+    <div class="nav-parent">
+      <a class:list={['nav-link', { active: isActive('/write-ups/') }]} href="/write-ups/" aria-current={isActive('/write-ups/') ? 'page' : undefined}>Write-ups</a>
+      <button class="nav-expander" type="button" data-nav-toggle aria-label="Expandir ou recolher Write-ups" aria-controls="writeups-submenu" aria-expanded={writeupsOpen}><span aria-hidden="true">⌄</span></button>
+    </div>
+    <div id="writeups-submenu" class="nav-submenu" hidden={!writeupsOpen}>
+      <div class="nav-parent nav-parent-nested">
+        <a class:list={['nav-link', { active: isActive('/write-ups/starting-point/'), contextual: !!article && sectionActive('starting-point') && !article.data.tier }]} href="/write-ups/starting-point/" aria-current={isActive('/write-ups/starting-point/') ? 'page' : undefined}>Starting Point</a>
+        <button class="nav-expander" type="button" data-nav-toggle aria-label="Expandir ou recolher Starting Point" aria-controls="starting-point-submenu" aria-expanded={startingPointOpen}><span aria-hidden="true">⌄</span></button>
+      </div>
+      <div id="starting-point-submenu" class="nav-submenu nav-submenu-tier" hidden={!startingPointOpen}>
+        {['0', '1', '2'].map((tier) => {
+          const href = `/write-ups/starting-point/tier-${tier}/`;
+          return <div class="nav-tier-group">
+            <a class:list={['nav-link', { active: isActive(href) }]} href={href} aria-current={isActive(href) ? 'page' : undefined}>Tier {tier}</a>
+            {tierWriteups(tier).map((entry) => {
+              const articleHref = `/write-ups/${entry.id}/`;
+              return <a class:list={['nav-link', 'nav-entry-link', { active: isActive(articleHref) }]} href={articleHref} aria-current={isActive(articleHref) ? 'page' : undefined}><OsIcon os={entry.data.os} /><span class="nav-entry-title">{entry.data.title}</span>{entry.data.status === 'draft' && <span class="nav-draft">rascunho</span>}</a>;
+            })}
+          </div>;
+        })}
+      </div>
+      <a class:list={['nav-link', 'nav-child-link', { active: isActive('/write-ups/machines/') }]} href="/write-ups/machines/" aria-current={isActive('/write-ups/machines/') ? 'page' : undefined}>Machines</a>
+      {machineWriteups.map((entry) => {
+        const articleHref = `/write-ups/${entry.id}/`;
+        return <a class:list={['nav-link', 'nav-entry-link', { active: isActive(articleHref) }]} href={articleHref} aria-current={isActive(articleHref) ? 'page' : undefined}><OsIcon os={entry.data.os} /><span class="nav-entry-title">{entry.data.title}</span>{entry.data.status === 'draft' && <span class="nav-draft">rascunho</span>}</a>;
+      })}
+    </div>
+
+    <a class:list={['nav-link', 'nav-reference', { active: isActive('/conceitos/') }]} href="/conceitos/" aria-current={isActive('/conceitos/') ? 'page' : undefined}>Conceitos</a>
+    <a class:list={['nav-link', { active: isActive('/ferramentas/') }]} href="/ferramentas/" aria-current={isActive('/ferramentas/') ? 'page' : undefined}>Ferramentas</a>
+  </nav>
+  <div class="sidebar-bottom"><span class="online-dot"></span> Aprendendo em público<span class="sidebar-version">v 1.0</span></div>
+</aside>

@@ -1,0 +1,179 @@
+<dialog id="writeup-lightbox" class="image-lightbox" aria-label="Visualizador de imagem">
+  <div class="lightbox-shell">
+    <div class="lightbox-toolbar">
+      <span class="lightbox-hint">Roda do mouse ou pinça para ampliar · arraste para mover</span>
+      <div class="lightbox-controls" aria-label="Controles da imagem">
+        <button type="button" data-zoom-out aria-label="Diminuir zoom" title="Diminuir zoom">−</button>
+        <button type="button" data-zoom-in aria-label="Aumentar zoom" title="Aumentar zoom">+</button>
+        <button type="button" data-zoom-reset aria-label="Ajustar à tela" title="Ajustar à tela">Ajustar</button>
+        <button type="button" data-close aria-label="Fechar imagem" title="Fechar imagem">×</button>
+      </div>
+    </div>
+    <div class="lightbox-stage"><img alt="" draggable="false" /></div>
+    <p class="lightbox-caption"></p>
+  </div>
+</dialog>
+
+<script>
+  const article = document.querySelector<HTMLElement>('.writeup-body');
+  const dialog = document.querySelector<HTMLDialogElement>('#writeup-lightbox');
+  const stage = dialog?.querySelector<HTMLElement>('.lightbox-stage');
+  const expanded = stage?.querySelector<HTMLImageElement>('img');
+  const caption = dialog?.querySelector<HTMLElement>('.lightbox-caption');
+  const closeButton = dialog?.querySelector<HTMLButtonElement>('[data-close]');
+
+  if (article && dialog && stage && expanded && caption && closeButton) {
+    let opener: HTMLButtonElement | null = null;
+    let previousOverflow = '';
+    let previousPadding = '';
+    let zoom = 1;
+    let panX = 0;
+    let panY = 0;
+    let dragX = 0;
+    let dragY = 0;
+    let pinchDistance = 0;
+    let pinchZoom = 1;
+    let pinchX = 0;
+    let pinchY = 0;
+    const pointers = new Map<number, PointerEvent>();
+    const maxZoom = 8;
+
+    const clampPan = () => {
+      if (zoom <= 1) { panX = 0; panY = 0; return; }
+      const width = expanded.offsetWidth;
+      const height = expanded.offsetHeight;
+      const boundX = Math.max(0, (width * zoom - stage.clientWidth) / 2);
+      const boundY = Math.max(0, (height * zoom - stage.clientHeight) / 2);
+      panX = Math.max(-boundX, Math.min(boundX, panX));
+      panY = Math.max(-boundY, Math.min(boundY, panY));
+    };
+    const renderZoom = () => {
+      clampPan();
+      expanded.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+      stage.classList.toggle('is-zoomed', zoom > 1);
+    };
+    const setZoom = (next: number, clientX?: number, clientY?: number) => {
+      const target = Math.max(1, Math.min(maxZoom, next));
+      if (clientX !== undefined && clientY !== undefined) {
+        const bounds = stage.getBoundingClientRect();
+        const x = clientX - bounds.left - bounds.width / 2;
+        const y = clientY - bounds.top - bounds.height / 2;
+        panX = x - (x - panX) * target / zoom;
+        panY = y - (y - panY) * target / zoom;
+      }
+      zoom = target;
+      renderZoom();
+    };
+    const open = (button: HTMLButtonElement, image: HTMLImageElement, label: string) => {
+      opener = button;
+      expanded.src = image.currentSrc || image.src;
+      expanded.alt = image.alt;
+      caption.textContent = label;
+      zoom = 1; panX = 0; panY = 0;
+      renderZoom();
+      previousOverflow = document.body.style.overflow;
+      previousPadding = document.body.style.paddingRight;
+      const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`;
+      document.body.style.overflow = 'hidden';
+      dialog.showModal();
+      closeButton.focus();
+    };
+
+    for (const image of article.querySelectorAll<HTMLImageElement>('img')) {
+      if (image.closest('.zoom-trigger')) continue;
+      const paragraph = image.parentElement;
+      let figure = image.closest('figure');
+      if (!figure) {
+        figure = document.createElement('figure');
+        if (paragraph?.tagName === 'P' && paragraph.childElementCount === 1) {
+          const next = paragraph.nextElementSibling;
+          paragraph.before(figure);
+          paragraph.remove();
+          if (next?.tagName === 'P' && next.childElementCount === 1 && next.firstElementChild?.tagName === 'EM') {
+            const figcaption = document.createElement('figcaption');
+            figcaption.append(...next.childNodes);
+            figure.append(figcaption);
+            next.remove();
+          }
+        } else {
+          image.before(figure);
+        }
+      }
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'zoom-trigger';
+      button.setAttribute('aria-label', `Ampliar imagem: ${image.alt || 'captura do write-up'}`);
+      image.before(button);
+      button.append(image);
+      figure.prepend(button);
+      button.addEventListener('click', () => open(button, image, figure?.querySelector('figcaption')?.textContent?.trim() || image.alt));
+    }
+
+    closeButton.addEventListener('click', () => dialog.close());
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && dialog.open) {
+        event.preventDefault();
+        dialog.close();
+      }
+    });
+    dialog.querySelector<HTMLButtonElement>('[data-zoom-in]')?.addEventListener('click', () => setZoom(zoom * 1.4));
+    dialog.querySelector<HTMLButtonElement>('[data-zoom-out]')?.addEventListener('click', () => setZoom(zoom / 1.4));
+    dialog.querySelector<HTMLButtonElement>('[data-zoom-reset]')?.addEventListener('click', () => setZoom(1));
+    dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+    dialog.addEventListener('close', () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPadding;
+      pointers.clear();
+      expanded.removeAttribute('src');
+      opener?.focus();
+    });
+    stage.addEventListener('wheel', (event) => {
+      event.preventDefault();
+      setZoom(zoom * Math.exp(-event.deltaY * 0.002), event.clientX, event.clientY);
+    }, { passive: false });
+    stage.addEventListener('pointerdown', (event) => {
+      pointers.set(event.pointerId, event);
+      stage.setPointerCapture(event.pointerId);
+      if (pointers.size === 1) { dragX = event.clientX - panX; dragY = event.clientY - panY; }
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        pinchDistance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        pinchZoom = zoom;
+        pinchX = (a.clientX + b.clientX) / 2;
+        pinchY = (a.clientY + b.clientY) / 2;
+      }
+    });
+    stage.addEventListener('pointermove', (event) => {
+      if (!pointers.has(event.pointerId)) return;
+      pointers.set(event.pointerId, event);
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        const centerX = (a.clientX + b.clientX) / 2;
+        const centerY = (a.clientY + b.clientY) / 2;
+        setZoom(pinchZoom * distance / Math.max(1, pinchDistance), pinchX, pinchY);
+        panX += centerX - pinchX;
+        panY += centerY - pinchY;
+        pinchX = centerX;
+        pinchY = centerY;
+        renderZoom();
+      } else if (zoom > 1) {
+        panX = event.clientX - dragX;
+        panY = event.clientY - dragY;
+        renderZoom();
+      }
+    });
+    const releasePointer = (event: PointerEvent) => {
+      pointers.delete(event.pointerId);
+      if (pointers.size === 1) {
+        const point = [...pointers.values()][0];
+        dragX = point.clientX - panX;
+        dragY = point.clientY - panY;
+      }
+    };
+    stage.addEventListener('pointerup', releasePointer);
+    stage.addEventListener('pointercancel', releasePointer);
+    window.addEventListener('resize', renderZoom);
+  }
+</script>

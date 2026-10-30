@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleList from '../../components/ArticleList.astro';
+import WriteupCard from '../../components/WriteupCard.astro';
+import { getPublishedWriteupCards, getUpcomingWriteups } from '../../lib/writeups';
+const publishedCards = await getPublishedWriteupCards();
+const upcomingWriteups = await getUpcomingWriteups();
+---
+<BaseLayout title="Write-ups" description="Write-ups publicados e estudos em preparação no blog s3t3.">
+  <div class="page-intro"><div class="section-kicker">/ laboratório</div><h1>Write-ups<span class="accent">.</span></h1><p class="page-lead">Relatos de investigação, da enumeração às conclusões. Os artigos prontos para leitura ficam listados aqui.</p></div>
+  <section class="content-section" aria-labelledby="published-title"><div class="section-heading"><div><div class="section-kicker">/ biblioteca</div><h2 id="published-title">Artigos publicados</h2><p>Selecione um título para abrir o write-up completo.</p></div></div>{publishedCards.length > 0 ? <div class="card-grid">{publishedCards.map((entry) => <WriteupCard entry={entry} />)}</div> : <ArticleList entries={[]} />}</section>
+  <div class="category-grid"><a class="category-tile" href="/write-ups/starting-point/"><span class="tile-index">01 / trilha</span><strong>Starting Point</strong><span>Tier 0 · Tier 1 · Tier 2 <b aria-hidden="true">↗</b></span></a><a class="category-tile" href="/write-ups/machines/"><span class="tile-index">02 / prática</span><strong>Machines</strong><span>Máquinas regulares <b aria-hidden="true">↗</b></span></a></div>
+  <section class="content-section" aria-labelledby="upcoming-title"><div class="section-heading"><div><div class="section-kicker">/ em andamento</div><h2 id="upcoming-title">Em preparação</h2><p>Estes estudos ainda não são artigos publicados.</p></div></div><div class="card-grid">{upcomingWriteups.map((entry) => <WriteupCard entry={entry} />)}</div></section>
+</BaseLayout>

@@ -1,0 +1,50 @@
+---
+interface Entry {
+  title: string;
+  os: string;
+  category: string;
+  tier?: string;
+  techniques: readonly string[];
+  summary: string;
+  number?: string;
+  image?: string;
+  imageAlt?: string;
+  href?: string;
+  status?: 'published' | 'draft';
+}
+const { entry } = Astro.props as { entry: Entry };
+---
+<article class="writeup-card">
+  <div class="card-image" aria-label={entry.image ? undefined : `Espaço reservado para a imagem oficial de ${entry.title}`}>
+    {entry.number && <span class="image-corner">HTB / {entry.number}</span>}
+    {entry.image
+      ? <img class="card-machine-image" src={entry.image} alt={entry.imageAlt ?? `Avatar da máquina ${entry.title}`} loading="lazy" />
+      : <><span class="image-symbol" aria-hidden="true">&gt;_</span><span class="image-caption">Imagem oficial em breve</span></>}
+  </div>
+  <div class="card-body">
+    <div class="card-topline"><span>{entry.os} <span class="dot">·</span> {entry.category} {entry.tier}</span><span class="status">{entry.status === 'published' ? 'Publicado' : 'Em preparação'}</span></div>
+    <h3>{entry.href ? <a href={entry.href}>{entry.title}</a> : entry.title}</h3>
+    <p>{entry.summary}</p>
+    <div class="tags" aria-label="Técnicas">{entry.techniques.map((technique) => <span>{technique}</span>)}</div>
+  </div>
+</article>
+
+<style>
+  .card-image {
+    background-image: url('/images/banners/htb-banner.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .card-image::after { display: none; }
+  .card-machine-image {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: auto;
+    height: 54%;
+    max-width: 54%;
+    object-fit: contain;
+    margin: auto;
+  }
+</style>

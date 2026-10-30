@@ -1,0 +1,6 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+const entries = (await getCollection('notes')).filter((entry) => entry.data.kind === 'conceitos');
+---
+<BaseLayout title="Conceitos" description="Notas independentes sobre conceitos de cibersegurança e segurança ofensiva."><div class="page-intro"><div class="section-kicker">/ base de conhecimento</div><h1>Conceitos<span class="accent">.</span></h1><p class="page-lead">Explicações reutilizáveis para consultar durante os write-ups. Os primeiros tópicos planejados incluem LFI, SUID e PATH Hijacking.</p></div>{entries.length ? <div class="article-list">{entries.map((entry) => <a class="article-row" href={`/notas/${entry.id}/`}><span>{entry.data.title}</span><small>{entry.data.description}</small><span aria-hidden="true">↗</span></a>)}</div> : <div class="empty-state"><span class="empty-symbol">&gt;_</span><h2>Notas a caminho</h2><p>Esta seção crescerá conforme os estudos forem documentados.</p></div>}</BaseLayout>
