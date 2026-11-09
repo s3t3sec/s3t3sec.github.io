@@ -35,5 +35,6 @@ pnpm-debug.log*
 /s3t3sec.github.io/
 /public/images/banners/Portal Cibernético Neon Verde.png
 
-# GitHub Pages is intentionally deferred
-/.github/workflows/deploy.yml
+# Only the GitHub Pages workflow may be versioned here
+/.github/workflows/*
+!/.github/workflows/deploy.yml
